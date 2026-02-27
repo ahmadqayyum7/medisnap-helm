@@ -11,7 +11,7 @@ spec:
   source:
     repoURL: git@github.com:ahmadqayyum7/medisnap-helm.git
     targetRevision: main
-    path: gitops/charts/medisnap
+    path: charts/medisnap
     helm:
       releaseName: medisnap
       valueFiles:
