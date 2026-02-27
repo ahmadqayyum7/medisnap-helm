@@ -1,0 +1,34 @@
+replicaCount: 2
+
+image:
+  repository: 493354281237.dkr.ecr.us-east-1.amazonaws.com/medisnap
+  tag: "latest"
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 3000
+
+ingress:
+  enabled: true
+  className: alb
+  host: ""        # override per env
+  paths:
+    - path: /
+      pathType: Prefix
+  annotations: {}
+  tls: []         # optional
+
+resources: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+probes:
+  readiness:
+    initialDelaySeconds: 10
+    periodSeconds: 10
+  liveness:
+    initialDelaySeconds: 30
+    periodSeconds: 10
