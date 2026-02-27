@@ -1,6 +1,6 @@
 replicaCount: 2
 image:
-  tag: "stage-initial"
+  tag: "c454d932816b4af0262c8c8a612a118cc3159919"
 
 ingress:
   host: "stage.medisnapdiagnostics.com"
