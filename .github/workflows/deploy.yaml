@@ -1,0 +1,70 @@
+name: Build & Deploy to Dev (GitOps)
+
+on:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build_push_update_gitops:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout app repo
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push image
+        env:
+          ECR_REPO: ${{ secrets.ECR_REPO }}
+        run: |
+          set -e
+          TAG="${GITHUB_SHA}"
+          docker build -t "$ECR_REPO:$TAG" .
+          docker push "$ECR_REPO:$TAG"
+          echo "IMAGE_TAG=$TAG" >> $GITHUB_ENV
+
+      - name: Checkout GitOps repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.GITOPS_REPO }}
+          token: ${{ secrets.GITOPS_TOKEN }}
+          path: gitops
+
+      - name: Update Helm values (dev) with new image tag
+        run: |
+          set -e
+          FILE="gitops/gitops/envs/dev/medisnap-values.yaml"
+          echo "Updating $FILE to tag $IMAGE_TAG"
+
+          # Replace or add image.tag
+          if grep -qE '^\s*tag:\s*"' "$FILE"; then
+            sed -i "s/^\(\s*tag:\s*\).*/\1\"$IMAGE_TAG\"/g" "$FILE"
+          else
+            # ensure image: exists; if not, append it
+            if ! grep -qE '^\s*image:\s*$' "$FILE"; then
+              printf "\nimage:\n" >> "$FILE"
+            fi
+            printf "  tag: \"%s\"\n" "$IMAGE_TAG" >> "$FILE"
+          fi
+
+      - name: Create PR to GitOps repo
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITOPS_TOKEN }}
+          path: gitops
+          commit-message: "dev: bump medisnap image to ${{ env.IMAGE_TAG }}"
+          title: "dev: bump medisnap image to ${{ env.IMAGE_TAG }}"
+          body: "Automated image update from app repo CI for dev environment."
+          branch: "ci/dev-bump-${{ env.IMAGE_TAG }}"
+          base: main
