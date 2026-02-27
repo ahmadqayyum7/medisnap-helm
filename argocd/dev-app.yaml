@@ -13,9 +13,9 @@ spec:
     targetRevision: main
     path: charts/medisnap
     helm:
-      releaseName: medisnap
+      releaseName: medisnap-dev
       valueFiles:
-        - ../../envs/dev/medisnap-values.yaml
+        - values-dev.yaml
   syncPolicy:
     automated:
       prune: true
