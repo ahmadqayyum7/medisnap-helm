@@ -13,6 +13,8 @@ spec:
       labels:
         app: medisnap
     spec:
+      nodeSelector:
+        workload: test-medisnap
       containers:
         - name: medisnap
           image: 493354281237.dkr.ecr.us-east-1.amazonaws.com/medisnap:latest
