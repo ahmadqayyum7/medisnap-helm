@@ -34,9 +34,18 @@ spec:
             periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
           resources:
 {{- toYaml .Values.resources | nindent 12 }}
+
+{{- with .Values.nodeSelector }}
       nodeSelector:
-{{- toYaml .Values.nodeSelector | nindent 8 }}
+{{ toYaml . | nindent 8 }}
+{{- end }}
+
+{{- with .Values.tolerations }}
       tolerations:
-{{- toYaml .Values.tolerations | nindent 8 }}
+{{ toYaml . | nindent 8 }}
+{{- end }}
+
+{{- with .Values.affinity }}
       affinity:
-{{- toYaml .Values.affinity | nindent 8 }}
+{{ toYaml . | nindent 8 }}
+{{- end }}
